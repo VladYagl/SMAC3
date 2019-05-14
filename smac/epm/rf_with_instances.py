@@ -295,3 +295,6 @@ class RandomForestWithInstances(AbstractEPM):
             var = var.reshape((-1, 1))
 
         return mean, var
+
+    def get_maximum(self):
+        return self.rf.get_maximum(0.0)

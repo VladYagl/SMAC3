@@ -208,7 +208,7 @@ class LocalSearch(AcquisitionFunctionMaximizer):
 
         init_points = self._get_initial_points(
             num_points, runhistory)
-            
+
         configs_acq = []
         # Start N local search from different random start points
         for start_point in init_points:
@@ -227,7 +227,7 @@ class LocalSearch(AcquisitionFunctionMaximizer):
         return configs_acq
 
     def _get_initial_points(self, num_points, runhistory):
-        
+
         if runhistory.empty():
             init_points = self.config_space.sample_configuration(
                 size=num_points)
@@ -244,7 +244,7 @@ class LocalSearch(AcquisitionFunctionMaximizer):
                 map(lambda x: x[1],
                     configs_previous_runs_sorted[:num_configs_local_search])
             )
-            
+
         return init_points
 
     def _one_iter(
@@ -442,6 +442,47 @@ class RandomSearch(AcquisitionFunctionMaximizer):
                 rand_configs[i].origin = 'Random Search'
             return [(0, rand_configs[i]) for i in range(len(rand_configs))]
 
+
+class ForestSearch(AcquisitionFunctionMaximizer):
+    def _maximize(
+            self,
+            runhistory: RunHistory,
+            stats: Stats,
+            num_points: int,
+            _sorted: bool=False,
+            **kwargs
+    ) -> List[Tuple[float, Configuration]]:
+        (lows, highs), value = self.acquisition_function.model.get_maximum()
+        rand_configs = []
+
+        # print("-------- COMING SOON --------------")
+        # config = Configuration(self.config_space, vector=np.array(lows))
+        # print("Vector: ", config.is_valid_configuration(), "\n************************")
+
+        # print("lower : upper :", [(param.lower, param.upper) for param in self.config_space.get_hyperparameters()])
+
+        # points = np.array(
+        #     list(
+        #         self.rng.uniform(
+        #             max(low, param.lower), min(high, param.upper), num_points
+        #         ) for (low, high), param in zip(zip(lows, highs), self.config_space.get_hyperparameters())
+        #     )
+        # ).transpose()
+
+        points = np.array(list(self.rng.uniform(0, 1, num_points) for i in self.config_space.get_hyperparameters())).transpose()
+
+        rand_configs = []
+        for point in points:
+            rand_configs.append(Configuration(self.config_space, vector=point))
+
+        if _sorted:
+            for i in range(len(rand_configs)):
+                rand_configs[i].origin = 'Random Search (sorted)'
+            return self._sort_configs_by_acq_value(rand_configs)
+        else:
+            for i in range(len(rand_configs)):
+                rand_configs[i].origin = 'Random Search'
+            return [(0, rand_configs[i]) for i in range(len(rand_configs))]
 
 class InterleavedLocalAndRandomSearch(AcquisitionFunctionMaximizer):
     """Implements SMAC's default acquisition function optimization.
