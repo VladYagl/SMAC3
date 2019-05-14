@@ -469,7 +469,7 @@ class ForestSearch(AcquisitionFunctionMaximizer):
         #     )
         # ).transpose()
 
-        points = np.array(list(self.rng.uniform(0, 1, num_points) for i in self.config_space.get_hyperparameters())).transpose()
+        points = np.array(list(self.rng.uniform(max(low, 0), min(high, 1), num_points) for low, high in zip(lows, highs))).transpose()
 
         rand_configs = []
         for point in points:

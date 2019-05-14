@@ -92,6 +92,7 @@ scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternative 
                      "cs": cs,               # configuration space
                      "deterministic": "true",
                      "memory_limit": 3072,   # adapt this to reasonable value for your hardware
+                     "acq_opt_challengers": 100,  # NUMBER OF SAMPLED POINTS ||| THAT WHAT I CARE ABOUT
                      })
 
 # To optimize, we pass the function to the SMAC-object
