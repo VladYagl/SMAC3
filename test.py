@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_val_score
@@ -55,14 +53,8 @@ def rf_from_cfg(cfg, seed):
     # Creating root mean square error for sklearns crossvalidation
     rmse_scorer = make_scorer(rmse, greater_is_better=False)
     score = cross_val_score(rfr, boston.data, boston.target, cv=11, scoring=rmse_scorer)
+    print("RUN :::: ", -1 * np.mean(score))
     return -1 * np.mean(score)  # Because cross_validation sign-flips the score
-
-
-logger = logging.getLogger("RF-example")
-logging.basicConfig(level=logging.INFO)
-# logging.basicConfig(level=logging.DEBUG)  # Enable to show debug-output
-logger.info("Running random forest example for SMAC. If you experience "
-            "difficulties, try to decrease the memory-limit.")
 
 # Build Configuration Space which defines all parameters and their ranges.
 # To illustrate different parameter types,
@@ -97,10 +89,10 @@ scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternative 
 
 # To optimize, we pass the function to the SMAC-object
 types, bounds = get_types(scenario.cs, scenario.feature_array)
-rfr = RandomForestWithInstances(types=types, bounds=bounds, instance_features=scenario.feature_array,)
+rfr = RandomForestWithInstances(types=types, bounds=bounds, instance_features=scenario.feature_array)
 ei = EI(model=rfr)
-optimizer = ForestSearch(ei, cs)
-# optimizer = RandomSearch(ei, cs)
+# optimizer = ForestSearch(ei, cs)
+optimizer = RandomSearch(ei, cs)
 smac = SMAC(scenario=scenario, rng=np.random.RandomState(42), model=rfr, acquisition_function=ei,
             tae_runner=rf_from_cfg, acquisition_function_optimizer=optimizer)
 
@@ -124,5 +116,5 @@ finally:
 inc_value = smac.get_tae_runner().run(incumbent, 1)[1]
 print("Optimized Value: %.2f" % (inc_value))
 
-print(rfr.get_maximum())
+print(rfr.get_minimum())
 exit()

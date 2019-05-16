@@ -452,8 +452,9 @@ class ForestSearch(AcquisitionFunctionMaximizer):
             _sorted: bool=False,
             **kwargs
     ) -> List[Tuple[float, Configuration]]:
-        (lows, highs), value = self.acquisition_function.model.get_maximum()
+        (lows, highs), value = self.acquisition_function.model.get_minimum()
         rand_configs = []
+        # print (list(zip(lows, highs)))
 
         # print("-------- COMING SOON --------------")
         # config = Configuration(self.config_space, vector=np.array(lows))
