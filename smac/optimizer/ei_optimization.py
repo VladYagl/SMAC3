@@ -444,6 +444,16 @@ class RandomSearch(AcquisitionFunctionMaximizer):
 
 
 class ForestSearch(AcquisitionFunctionMaximizer):
+    def __init__(
+            self,
+            acquisition_function: AbstractAcquisitionFunction,
+            config_space: ConfigurationSpace,
+            rng: Union[bool, np.random.RandomState] = None,
+            ratio: int = 1.0
+    ):
+        super().__init__(acquisition_function, config_space, rng)
+        self.ratio = ratio
+
     def _maximize(
             self,
             runhistory: RunHistory,
@@ -452,37 +462,27 @@ class ForestSearch(AcquisitionFunctionMaximizer):
             _sorted: bool=False,
             **kwargs
     ) -> List[Tuple[float, Configuration]]:
+        size=int(np.floor(num_points * (1.0 - self.ratio)))
+        if size != 1:
+            rand_configs = self.config_space.sample_configuration(size=size)
+        else:
+            rand_configs = [self.config_space.sample_configuration(size=size)]
+
+        for i in range(len(rand_configs)):
+            rand_configs[i].origin = 'Forest Search (random)'
+
         (lows, highs), value = self.acquisition_function.model.get_minimum()
-        rand_configs = []
-        # print (list(zip(lows, highs)))
-
-        # print("-------- COMING SOON --------------")
-        # config = Configuration(self.config_space, vector=np.array(lows))
-        # print("Vector: ", config.is_valid_configuration(), "\n************************")
-
-        # print("lower : upper :", [(param.lower, param.upper) for param in self.config_space.get_hyperparameters()])
-
-        # points = np.array(
-        #     list(
-        #         self.rng.uniform(
-        #             max(low, param.lower), min(high, param.upper), num_points
-        #         ) for (low, high), param in zip(zip(lows, highs), self.config_space.get_hyperparameters())
-        #     )
-        # ).transpose()
-
-        points = np.array(list(self.rng.uniform(max(low, 0), min(high, 1), num_points) for low, high in zip(lows, highs))).transpose()
-
-        rand_configs = []
+        points = np.array(
+            list(self.rng.uniform(max(low, 0), min(high, 1), int(np.ceil(num_points * self.ratio)))
+                 for low, high in zip(lows, highs))
+        ).transpose()
         for point in points:
-            rand_configs.append(Configuration(self.config_space, vector=point))
+            rand_configs.append(Configuration(self.config_space, vector=point, origin="Forset Search (forest)"))
+        self.rng.shuffle(rand_configs)
 
         if _sorted:
-            for i in range(len(rand_configs)):
-                rand_configs[i].origin = 'Random Search (sorted)'
             return self._sort_configs_by_acq_value(rand_configs)
         else:
-            for i in range(len(rand_configs)):
-                rand_configs[i].origin = 'Random Search'
             return [(0, rand_configs[i]) for i in range(len(rand_configs))]
 
 class InterleavedLocalAndRandomSearch(AcquisitionFunctionMaximizer):

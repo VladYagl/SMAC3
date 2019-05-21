@@ -297,4 +297,4 @@ class RandomForestWithInstances(AbstractEPM):
         return mean, var
 
     def get_minimum(self):
-        return self.rf.get_minimum(0.0)
+        return self.rf.get_minimum(False, 0.0)
